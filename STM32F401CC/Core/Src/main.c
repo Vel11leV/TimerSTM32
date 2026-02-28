@@ -55,19 +55,34 @@ static void MX_GPIO_Init(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+
+#define DEBOUNCE_TIMEOUT 70
+#define LONGPUSH_TIMEOUT 500
+
 static GPIO_PinState s_pinStatePrevious;
 static GPIO_PinState s_pinStateNew;
 static uint8_t buttonDebounce = 0;
-
-
-#define DEBOUNCE_TIMEOUT 200
-
 volatile uint32_t button_press_time = 0;
+static GPIO_InitTypeDef GPIO_InitStruct = {0};
 
-void buttonShort(void) {
+static void setInputInterruptionRicing(void){
+    GPIO_InitStruct.Pin = GPIO_PIN_11;
+    GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
+    GPIO_InitStruct.Pull = GPIO_NOPULL;
+    HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+}
+static void setInputInterruptionFalling(void){
+    GPIO_InitStruct.Pin = GPIO_PIN_11;
+    GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
+    GPIO_InitStruct.Pull = GPIO_NOPULL;
+    HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+}
+
+
+void buttonShortPushCallback(void) {
     HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_9);
 }
-void buttonLong(void) {
+void buttonLongPushCallback(void) {
     HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_10);
 }
 
@@ -78,14 +93,15 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
         __HAL_TIM_SET_COUNTER(htim, 0);
         s_pinStatePrevious = s_pinStateNew;
         s_pinStateNew = HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_11);
-        if (s_pinStateNew == s_pinStatePrevious) {
+        if (s_pinStateNew == s_pinStatePrevious && s_pinStateNew == GPIO_PIN_SET ) {
             buttonDebounce = 1;
             button_press_time = HAL_GetTick();
-
+            setInputInterruptionFalling();
             HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);
 
         } else {
             buttonDebounce = 0;
+            setInputInterruptionRicing();
             HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);
         }
     }
@@ -97,27 +113,23 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
      if(GPIO_Pin == GPIO_PIN_11){
          HAL_NVIC_DisableIRQ(EXTI15_10_IRQn);
          if (!buttonDebounce) {
-
-         s_pinStateNew = HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_11);
-         __HAL_TIM_SET_COUNTER(&htim1, 0);
-         TIM1->ARR = DEBOUNCE_TIMEOUT;
-         HAL_TIM_Base_Start_IT(&htim1);
-
+             s_pinStateNew = HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_11);
+             __HAL_TIM_SET_COUNTER(&htim1, 0);
+             TIM1->ARR = DEBOUNCE_TIMEOUT;
+             HAL_TIM_Base_Start_IT(&htim1);
          } else {
              uint32_t currentTick = HAL_GetTick();
              uint32_t duration = currentTick - button_press_time;
 
-             if (duration > 2000) {
-                 buttonLong();
+             if (duration > LONGPUSH_TIMEOUT) {
+                 buttonLongPushCallback();
              } else {
-                 buttonShort();
+                 buttonShortPushCallback();
              }
-
              buttonDebounce = 0;
+             setInputInterruptionRicing();
              HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);
-
          }
-
      }
 }
 
@@ -166,7 +178,6 @@ int main(void)
   while (1)
   {
 
-      s_pinStateNew = HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_11);
       HAL_Delay(500);
     /* USER CODE END WHILE */
 
@@ -284,7 +295,7 @@ static void MX_GPIO_Init(void)
 
   /*Configure GPIO pin : PA11 */
   GPIO_InitStruct.Pin = GPIO_PIN_11;
-  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING_FALLING;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
