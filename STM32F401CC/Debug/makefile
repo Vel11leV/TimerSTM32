@@ -1,6 +1,6 @@
 ################################################################################
 # Automatically-generated file. Do not edit!
-# Toolchain: GNU Tools for STM32 (9-2020-q2-update)
+# Toolchain: GNU Tools for STM32 (14.3.rel1)
 ################################################################################
 
 -include ../makefile.init
@@ -43,14 +43,14 @@ BUILD_ARTIFACT := $(BUILD_ARTIFACT_PREFIX)$(BUILD_ARTIFACT_NAME)$(if $(BUILD_ART
 EXECUTABLES += \
 STM32F401CC.elf \
 
+MAP_FILES += \
+STM32F401CC.map \
+
 SIZE_OUTPUT += \
 default.size.stdout \
 
 OBJDUMP_LIST += \
 STM32F401CC.list \
-
-OBJCOPY_BIN += \
-STM32F401CC.bin \
 
 
 # All Target
@@ -60,8 +60,8 @@ all: main-build
 main-build: STM32F401CC.elf secondary-outputs
 
 # Tool invocations
-STM32F401CC.elf: $(OBJS) $(USER_OBJS) C:\Users\mishc\Desktop\!!!\ BEETROOT\ !!!\TimerSTM32\STM32F401CC\STM32F401CCUX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
-	arm-none-eabi-gcc -o "STM32F401CC.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"C:\Users\mishc\Desktop\!!! BEETROOT !!!\TimerSTM32\STM32F401CC\STM32F401CCUX_FLASH.ld" --specs=nosys.specs -Wl,-Map="STM32F401CC.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+STM32F401CC.elf STM32F401CC.map: $(OBJS) $(USER_OBJS) C:\Users\mishc\Desktop\!!!BEETROOT2!!!\debounce\TimerSTM32\STM32F401CC\STM32F401CCUX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
+	arm-none-eabi-gcc -o "STM32F401CC.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"C:\Users\mishc\Desktop\!!!BEETROOT2!!!\debounce\TimerSTM32\STM32F401CC\STM32F401CCUX_FLASH.ld" --specs=nosys.specs -Wl,-Map="STM32F401CC.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
 	@echo 'Finished building target: $@'
 	@echo ' '
 
@@ -75,17 +75,12 @@ STM32F401CC.list: $(EXECUTABLES) makefile objects.list $(OPTIONAL_TOOL_DEPS)
 	@echo 'Finished building: $@'
 	@echo ' '
 
-STM32F401CC.bin: $(EXECUTABLES) makefile objects.list $(OPTIONAL_TOOL_DEPS)
-	arm-none-eabi-objcopy  -O binary $(EXECUTABLES) "STM32F401CC.bin"
-	@echo 'Finished building: $@'
-	@echo ' '
-
 # Other Targets
 clean:
-	-$(RM) STM32F401CC.bin STM32F401CC.elf STM32F401CC.list default.size.stdout
+	-$(RM) STM32F401CC.elf STM32F401CC.list STM32F401CC.map default.size.stdout
 	-@echo ' '
 
-secondary-outputs: $(SIZE_OUTPUT) $(OBJDUMP_LIST) $(OBJCOPY_BIN)
+secondary-outputs: $(SIZE_OUTPUT) $(OBJDUMP_LIST)
 
 fail-specified-linker-script-missing:
 	@echo 'Error: Cannot find the specified linker script. Check the linker settings in the build configuration.'
